@@ -1,32 +1,26 @@
 package repository
 
 import (
-	"fmt"
-
 	"github.com/juanitodread/ondemand-go-bootcamp/domain/model"
+	"github.com/juanitodread/ondemand-go-bootcamp/infrastructure/datastore"
 )
 
-type pokemonRepository struct{}
+type pokemonRepository struct {
+	pokemonDS datastore.PokemonDS
+}
 
 type PokemonRepository interface {
 	FindAll(p []*model.Pokemon) ([]*model.Pokemon, error)
 }
 
-func NewPokemonRepository() PokemonRepository {
-	return &pokemonRepository{}
+func NewPokemonRepository(pokemonDS datastore.PokemonDS) PokemonRepository {
+	return &pokemonRepository{
+		pokemonDS: pokemonDS,
+	}
 }
 
 func (pr *pokemonRepository) FindAll(p []*model.Pokemon) ([]*model.Pokemon, error) {
-	// returning in memory data
-	pokemons := make([]*model.Pokemon, 5)
-	for i := 0; i < 5; i++ {
-		ID := i + 1
-		pokemon := model.Pokemon{
-			ID:   ID,
-			Name: fmt.Sprintf("pokemons-%d", ID),
-		}
-		pokemons[i] = &pokemon
-	}
+	pokemons, _ := pr.pokemonDS.Read()
 
 	return pokemons, nil
 }

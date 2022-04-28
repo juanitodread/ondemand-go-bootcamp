@@ -18,7 +18,7 @@ func (r *registry) NewPokemonInteractor() ii.PokemonInteractor {
 }
 
 func (r *registry) NewPokemonRepository() ir.PokemonRepository {
-	return repository.NewPokemonRepository()
+	return repository.NewPokemonRepository(r.pokemonDS)
 }
 
 func (r *registry) NewPokemonPresenter() ip.PokemonPresenter {
