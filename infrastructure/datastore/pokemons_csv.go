@@ -2,11 +2,10 @@ package datastore
 
 import (
 	"encoding/csv"
+	"errors"
 	"fmt"
 	"os"
-	"strconv"
-
-	"github.com/juanitodread/ondemand-go-bootcamp/domain/model"
+	"strings"
 )
 
 type pokemonDS struct {
@@ -14,32 +13,28 @@ type pokemonDS struct {
 }
 
 type PokemonDS interface {
-	Read() ([]*model.Pokemon, error)
+	Read() ([][]string, error)
 }
 
-func NewPokemonDS(csvPath string) PokemonDS {
+func NewPokemonDS(csvPath string) (PokemonDS, error) {
+	if csvPath == "" {
+		return nil, errors.New("invalid CSV path: Path can't be empty")
+	}
+
+	if !strings.HasSuffix(csvPath, ".csv") {
+		return nil, fmt.Errorf("invalid CSV path [%s]: Path must have .csv extension", csvPath)
+	}
+
 	return &pokemonDS{
 		csvPath: csvPath,
-	}
+	}, nil
 }
 
-func (pds *pokemonDS) Read() ([]*model.Pokemon, error) {
-	pokemons, err := pds.parse()
-
-	if err != nil {
-		return nil, err
-	}
-
-	return pokemons, nil
-}
-
-func (pds *pokemonDS) parse() ([]*model.Pokemon, error) {
-	fmt.Println(pds.csvPath)
+func (pds *pokemonDS) Read() ([][]string, error) {
 	f, err := os.Open(pds.csvPath)
 
 	if err != nil {
-		fmt.Println(err)
-		return nil, err
+		return nil, fmt.Errorf("error: CSV file not found at this path: [%s]", pds.csvPath)
 	}
 
 	defer f.Close()
@@ -48,25 +43,16 @@ func (pds *pokemonDS) parse() ([]*model.Pokemon, error) {
 
 	// skip header csv
 	if _, err := csvReader.Read(); err != nil {
-		panic(err)
+		return nil, fmt.Errorf("error: CSV file missing header: [%s]", pds.csvPath)
 	}
 
 	records, err := csvReader.ReadAll()
 
+	// EOF is not an error in ReadAll() so in this case we're handling
+	// unexpected error (OS, different columns length, etc)
 	if err != nil {
-		fmt.Println(err)
-		return nil, err
+		return nil, fmt.Errorf("error: unexpected error=[%s], path=[%s]", err.Error(), pds.csvPath)
 	}
 
-	pokemons := make([]*model.Pokemon, len(records))
-	for i, record := range records {
-		pokemon := model.Pokemon{}
-		pokemon.ID, _ = strconv.Atoi(record[0])
-		pokemon.Name = record[1]
-		pokemon.Type = record[2]
-
-		pokemons[i] = &pokemon
-	}
-
-	return pokemons, nil
+	return records, nil
 }

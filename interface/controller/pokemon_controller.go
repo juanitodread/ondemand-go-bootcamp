@@ -2,7 +2,6 @@ package controller
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/juanitodread/ondemand-go-bootcamp/domain/model"
 	"github.com/juanitodread/ondemand-go-bootcamp/usecase/interactor"
 )
 
@@ -19,12 +18,11 @@ func NewPokemonController(pi interactor.PokemonInteractor) PokemonController {
 }
 
 func (pc *pokemonController) GetPokemons(ctx *gin.Context) {
-	var p []*model.Pokemon
-	p, err := pc.pokemonInteractor.GetAll(p)
+	p, err := pc.pokemonInteractor.GetAll()
 
 	if err != nil {
-		ctx.AbortWithError(500, err)
+		ctx.JSON(500, err.Error())
+	} else {
+		ctx.JSON(200, p)
 	}
-
-	ctx.JSON(200, p)
 }

@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/gin-gonic/gin"
 	"github.com/juanitodread/ondemand-go-bootcamp/config"
@@ -13,7 +14,13 @@ import (
 func main() {
 	config := config.Load()
 
-	pokemonDS := datastore.NewPokemonDS(config.PokemonDS.Path)
+	pokemonDS, err := datastore.NewPokemonDS(config.PokemonDS.Path)
+
+	// If there's an error getting the DS we can't serve any response
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
 
 	r := registry.NewRegistry(pokemonDS)
 
